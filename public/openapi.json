@@ -3,7 +3,7 @@
   "info": {
     "title": "Tenor Proxy API",
     "version": "0.1.0",
-    "description": "Unofficial search over Tenor's public website. No API key needed. Returns up to the first 50 website results; pagination and content-filter controls are not supported. GIFs are linked, not rehosted. Availability depends on Tenor's website."
+    "description": "Unofficial search and homepage featured GIF feed over Tenor's public website. No API key needed. Returns up to the first 50 website results; pagination and content-filter controls are not supported. GIFs are linked, not rehosted. Availability depends on Tenor's website."
   },
   "servers": [{ "url": "/" }],
   "paths": {
@@ -24,6 +24,24 @@
         }
       },
       "options": { "operationId": "searchPreflight", "summary": "CORS preflight", "responses": { "204": { "description": "Public cross-origin GET requests allowed." } } }
+    },
+    "/api/top": {
+      "get": {
+        "operationId": "topGifs",
+        "summary": "Get Tenor homepage top GIFs",
+        "description": "Fetches https://tenor.com/ and reads store-cache.gifs.featured.results in homepage order. Not a simulated search or trending category list. Returns the search response shape with query set to an empty string. Only limit is accepted; unknown or repeated parameters are rejected. No fallback if the homepage format changes.",
+        "parameters": [
+          { "name": "limit", "in": "query", "description": "Maximum results; fewer may be returned.", "schema": { "type": "integer", "minimum": 1, "maximum": 50, "default": 20 } }
+        ],
+        "responses": {
+          "200": { "description": "Homepage featured GIFs. Cached at Vercel's CDN for 10 minutes, with up to one hour of stale-while-revalidate.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TopResponse" } } } },
+          "400": { "$ref": "#/components/responses/InvalidQuery" },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "502": { "$ref": "#/components/responses/UpstreamError" },
+          "504": { "$ref": "#/components/responses/UpstreamTimeout" }
+        }
+      },
+      "options": { "operationId": "topPreflight", "summary": "CORS preflight", "responses": { "204": { "description": "Public cross-origin GET requests allowed." } } }
     }
   },
   "components": {
@@ -75,6 +93,12 @@
           "count": { "type": "integer", "minimum": 0, "maximum": 50 },
           "results": { "type": "array", "maxItems": 50, "items": { "$ref": "#/components/schemas/Gif" } }
         }
+      },
+      "TopResponse": {
+        "allOf": [
+          { "$ref": "#/components/schemas/SearchResponse" },
+          { "type": "object", "properties": { "query": { "type": "string", "const": "", "description": "Empty because the homepage feed has no search query." } } }
+        ]
       },
       "Error": {
         "type": "object",

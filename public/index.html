@@ -10,9 +10,10 @@
 <body>
   <header>
     <h1>Tenor Proxy</h1>
-    <p>Simple, unofficial GIF search. No API key required.</p>
+    <p>Simple, unofficial GIF search and homepage top feed. No API key required.</p>
     <p><code>GET /api/search?q=happy%20cat&amp;limit=10</code></p>
-    <p><a href="/openapi.json">Download OpenAPI</a> · <a href="/api/search?q=cat&amp;limit=3">Try a search</a></p>
+    <p><code>GET /api/top?limit=10</code> — actual homepage featured GIFs, not a search. Same response shape; <code>query</code> is an empty string.</p>
+    <p><a href="/openapi.json">Download OpenAPI</a> · <a href="/api/search?q=cat&amp;limit=3">Try a search</a> · <a href="/api/top?limit=3">Try homepage top GIFs</a></p>
     <p>Up to 50 results. No pagination. Media is served directly by Tenor; results use the website’s default content filter.</p>
   </header>
   <div id="swagger-ui"></div>
