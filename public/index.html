@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tenor Proxy API</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.33.1/swagger-ui.css">
+  <style>body{margin:0;background:#fafafa;font-family:system-ui,sans-serif}header{padding:24px 32px;border-bottom:1px solid #ddd}h1{margin:0 0 12px}code{background:#eee;padding:4px}a{color:#2459a6}</style>
+</head>
+<body>
+  <header>
+    <h1>Tenor Proxy</h1>
+    <p>Simple, unofficial GIF search. No API key required.</p>
+    <p><code>GET /api/search?q=happy%20cat&amp;limit=10</code></p>
+    <p><a href="/openapi.json">Download OpenAPI</a> · <a href="/api/search?q=cat&amp;limit=3">Try a search</a></p>
+    <p>Up to 50 results. No pagination. Media is served directly by Tenor; results use the website’s default content filter.</p>
+  </header>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5.33.1/swagger-ui-bundle.js"></script>
+  <script>SwaggerUIBundle({url:'/openapi.json',dom_id:'#swagger-ui',deepLinking:true});</script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Tenor Proxy API",
+    "version": "0.1.0",
+    "description": "Unofficial search over Tenor's public website. No API key needed. Returns up to the first 50 website results; pagination and content-filter controls are not supported. GIFs are linked, not rehosted. Availability depends on Tenor's website."
+  },
+  "servers": [{ "url": "/" }],
+  "paths": {
+    "/api/search": {
+      "get": {
+        "operationId": "searchGifs",
+        "summary": "Search Tenor GIFs",
+        "parameters": [
+          { "name": "q", "in": "query", "required": true, "description": "Search text, trimmed and whitespace-normalized. No control characters. Unknown or repeated parameters are rejected.", "schema": { "type": "string", "minLength": 1, "maxLength": 100 }, "example": "happy cat" },
+          { "name": "limit", "in": "query", "description": "Maximum results; fewer may be returned.", "schema": { "type": "integer", "minimum": 1, "maximum": 50, "default": 20 } }
+        ],
+        "responses": {
+          "200": { "description": "Search results. Cached at Vercel's CDN for 10 minutes, with up to one hour of stale-while-revalidate.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SearchResponse" } } } },
+          "400": { "$ref": "#/components/responses/InvalidQuery" },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "502": { "$ref": "#/components/responses/UpstreamError" },
+          "504": { "$ref": "#/components/responses/UpstreamTimeout" }
+        }
+      },
+      "options": { "operationId": "searchPreflight", "summary": "CORS preflight", "responses": { "204": { "description": "Public cross-origin GET requests allowed." } } }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Media": {
+        "type": "object",
+        "required": ["url", "width", "height"],
+        "properties": {
+          "url": { "type": "string", "format": "uri" },
+          "width": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+          "height": { "type": ["number", "null"], "exclusiveMinimum": 0 }
+        }
+      },
+      "Gif": {
+        "type": "object",
+        "required": ["id", "title", "description", "url", "gif", "preview", "width", "height", "media"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[0-9]+$", "description": "String to preserve IDs beyond JavaScript's safe integer range." },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "url": { "type": "string", "format": "uri", "description": "Tenor page URL for attribution." },
+          "gif": { "type": "string", "format": "uri", "description": "Full GIF URL, falling back to mediumgif or tinygif." },
+          "preview": { "type": "string", "format": "uri", "description": "Still preview when available; otherwise a smaller GIF or the main GIF." },
+          "width": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+          "height": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+          "media": {
+            "type": "object",
+            "description": "Available formats; keys may be absent.",
+            "additionalProperties": false,
+            "properties": {
+              "gif": { "$ref": "#/components/schemas/Media" },
+              "mediumgif": { "$ref": "#/components/schemas/Media" },
+              "tinygif": { "$ref": "#/components/schemas/Media" },
+              "gifpreview": { "$ref": "#/components/schemas/Media" },
+              "mp4": { "$ref": "#/components/schemas/Media" },
+              "tinymp4": { "$ref": "#/components/schemas/Media" },
+              "webm": { "$ref": "#/components/schemas/Media" },
+              "webp": { "$ref": "#/components/schemas/Media" },
+              "tinywebp": { "$ref": "#/components/schemas/Media" }
+            }
+          }
+        }
+      },
+      "SearchResponse": {
+        "type": "object",
+        "required": ["query", "count", "results"],
+        "properties": {
+          "query": { "type": "string" },
+          "count": { "type": "integer", "minimum": 0, "maximum": 50 },
+          "results": { "type": "array", "maxItems": 50, "items": { "$ref": "#/components/schemas/Gif" } }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": ["error"],
+        "properties": { "error": { "type": "object", "required": ["code", "message"], "properties": {
+          "code": { "type": "string", "enum": ["invalid_query", "method_not_allowed", "upstream_error", "upstream_timeout"] },
+          "message": { "type": "string" }
+        } } }
+      }
+    },
+    "responses": {
+      "InvalidQuery": { "description": "Invalid, missing, unknown, or repeated parameters.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "MethodNotAllowed": { "description": "Only GET and OPTIONS allowed.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "UpstreamError": { "description": "Tenor unavailable, blocked the request, or changed its page format.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "UpstreamTimeout": { "description": "Tenor exceeded the eight-second deadline.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+    }
+  }
+}
